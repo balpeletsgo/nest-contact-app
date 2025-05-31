@@ -4,7 +4,7 @@ import { SignInRequestDTO, SignUpRequestDTO } from 'src/dto/auth.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AuthResponse } from 'src/response/auth.response';
 import { ValidationService } from 'src/validation/validation.service';
-import { AuthValidation } from './auth.validation';
+import { AuthValidation } from 'src/auth/auth.validation';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
@@ -57,7 +57,10 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        'Invalid email or password',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     const isPasswordValid = await bcrypt.compare(
@@ -66,7 +69,10 @@ export class AuthService {
     );
 
     if (!isPasswordValid) {
-      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        'Invalid email or password',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     const payload = { id: user.id, email: user.email, name: user.name };
