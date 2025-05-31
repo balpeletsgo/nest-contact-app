@@ -36,6 +36,7 @@ export class AuthValidation {
       message: 'Passwords do not match',
       path: ['confirmPassword'],
     });
+
   static readonly SignIn = z.object({
     email: z
       .string({ required_error: 'Email is required' })

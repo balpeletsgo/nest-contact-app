@@ -1,5 +1,5 @@
 import { HttpException, Injectable } from '@nestjs/common';
-import { GetProfileRequestDTO } from 'src/dto/user.dto';
+import { UpdateProfileRequestDTO, UserRequestDTO } from 'src/dto/user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserResponse } from 'src/response/user.response';
 import { ValidationService } from 'src/validation/validation.service';
@@ -12,14 +12,11 @@ export class UserService {
     private validation: ValidationService,
   ) {}
 
-  async getProfile(userId: string): Promise<UserResponse> {
-    const getProfileRequest: GetProfileRequestDTO = this.validation.validate(
-      UserValidation.GetProfile,
-      { userId },
-    );
-
-    const user = await this.prisma.user.findFirst({
-      where: { id: getProfileRequest.userId },
+  async getProfile(user: UserRequestDTO): Promise<UserResponse> {
+    const foundUser = await this.prisma.user.findFirst({
+      where: {
+        id: user.id,
+      },
       select: {
         id: true,
         email: true,
@@ -27,14 +24,50 @@ export class UserService {
       },
     });
 
-    if (!user) {
+    if (!foundUser) {
       throw new HttpException('User not found', 404);
     }
 
     return {
-      id: user.id,
-      email: user.email,
-      name: user.name,
+      id: foundUser.id,
+      email: foundUser.email,
+      name: foundUser.name,
+    };
+  }
+
+  async updateProfile(
+    user: UserRequestDTO,
+    request: UpdateProfileRequestDTO,
+  ): Promise<UserResponse> {
+    const updateProfileRequest = this.validation.validate(
+      UserValidation.UpdateProfile,
+      request,
+    );
+
+    const foundUser = await this.prisma.user.findFirst({
+      where: {
+        id: user.id,
+      },
+    });
+
+    if (!foundUser) {
+      throw new HttpException('User not found', 404);
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        name: updateProfileRequest.name,
+      },
+      select: {
+        name: true,
+      },
+    });
+
+    return {
+      name: updatedUser.name,
     };
   }
 }

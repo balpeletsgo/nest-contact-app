@@ -2,11 +2,17 @@ import { Request } from 'express';
 import { UserValidation } from 'src/user/user.validation';
 import { z } from 'zod';
 
-export interface RequestUserDTO extends Request {
-  user: {
-    id: string;
-    email: string;
-    name: string;
-  };
+export class UserRequestDTO {
+  id: string;
+  email: string;
+  name: string;
 }
+
+export interface UserRequest extends Request {
+  user: UserRequestDTO;
+}
+
 export type GetProfileRequestDTO = z.infer<typeof UserValidation.GetProfile>;
+export type UpdateProfileRequestDTO = z.infer<
+  typeof UserValidation.UpdateProfile
+>;
