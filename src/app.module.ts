@@ -3,9 +3,9 @@ import { AuthController } from 'src/auth/auth.controller';
 import { AuthService } from 'src/auth/auth.service';
 import { CommonModule } from 'src/common/common.module';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UserController } from 'src/user/user.controller';
 import { UserService } from 'src/user/user.service';
 import { ValidationService } from 'src/validation/validation.service';
-import { UserController } from 'src/user/user.controller';
 
 @Module({
   imports: [CommonModule],

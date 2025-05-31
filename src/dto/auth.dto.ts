@@ -1,5 +1,19 @@
-import { z } from 'zod';
-import { AuthValidation } from 'src/auth/auth.validation';
+export class SignUpRequestDTO {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
 
-export type SignUpRequestDTO = z.infer<typeof AuthValidation.SignUp>;
-export type SignInRequestDTO = z.infer<typeof AuthValidation.SignIn>;
+export class SignInRequestDTO {
+  email: string;
+  password: string;
+}
+
+export class RefreshTokenRequestDTO {
+  refresh_token: string;
+}
+
+export class LogoutRequestDTO {
+  refresh_token: string;
+}
