@@ -86,7 +86,7 @@ export class PhoneService {
     });
 
     if (!phone) {
-      throw new HttpException('Phone not found', HttpStatus.NOT_FOUND);
+      throw new HttpException('Phone number not found', HttpStatus.NOT_FOUND);
     }
 
     return {
@@ -200,5 +200,24 @@ export class PhoneService {
         lastName: phone.contact.lastName || undefined,
       },
     };
+  }
+
+  async delete(request: GetPhoneByIdRequestDTO): Promise<void> {
+    const deletePhoneRequest: GetPhoneByIdRequestDTO = this.validation.validate(
+      PhoneValidation.GetPhoneById,
+      request,
+    );
+
+    await this.isPhoneExists(
+      deletePhoneRequest.contactId,
+      deletePhoneRequest.phoneId,
+    );
+
+    await this.prisma.phone.delete({
+      where: {
+        id: deletePhoneRequest.phoneId,
+        contactId: deletePhoneRequest.contactId,
+      },
+    });
   }
 }

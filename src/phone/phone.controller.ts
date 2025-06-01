@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -76,6 +77,24 @@ export class PhoneController {
       status: HttpStatus.OK,
       message: 'Phone number updated successfully',
       data: result,
+    };
+  }
+
+  @Delete(':phoneId')
+  @HttpCode(HttpStatus.OK)
+  async deletePhone(
+    @Param('contactId') contactId: string,
+    @Param('phoneId') phoneId: string,
+  ): Promise<WebResponse<null>> {
+    await this.phoneService.delete({
+      contactId,
+      phoneId,
+    });
+
+    return {
+      success: true,
+      status: HttpStatus.OK,
+      message: 'Phone number deleted successfully',
     };
   }
 }
