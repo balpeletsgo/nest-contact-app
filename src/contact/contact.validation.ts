@@ -18,7 +18,6 @@ export class ContactValidation {
           .email()
           .max(255, 'Email must be at most 255 characters long'),
       ])
-
       .optional(),
   });
 
