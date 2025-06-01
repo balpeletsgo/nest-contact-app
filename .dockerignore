@@ -1,0 +1,69 @@
+# Version control
+.git
+.gitignore
+.github
+
+# Node.js dependencies
+node_modules
+npm-debug.log
+pnpm-debug.log
+.pnpm-store
+yarn-error.log
+
+# Build output
+# We need the dist folder for the production stage, so don't ignore it
+# dist
+build
+.next
+# We need the generated directory for Prisma client
+# generated
+
+# Development and test files
+test
+coverage
+.vscode
+.idea
+.editorconfig
+*.md
+!README.md
+*.log
+
+# Environment variables
+.env*
+!.env.example
+!.env.docker
+
+# Docker files
+# Dockerfile and docker-compose are needed for the build context
+# Dockerfile
+# dockerfile
+# docker-compose*.yml
+.dockerignore
+
+# Other
+.DS_Store
+.cache
+.eslintcache
+.npm
+.prettierignore
+.eslintignore
+*.tsbuildinfo
+*.log
+*.md
+!README.md
+
+# Docker files
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Environment files
+.env*
+!.env.example
+
+# Other
+.DS_Store
+.tmp
+tmp
+*.swp
+*.swo
