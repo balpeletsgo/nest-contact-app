@@ -20,7 +20,6 @@ export class ErrorFilter implements ExceptionFilter {
         success: false,
         status: exception.getStatus(),
         message: exception.message,
-        errors: exception.getResponse(),
       });
     } else if (exception instanceof ZodError) {
       const formattedErrors = exception.errors.map((error) => ({
@@ -38,7 +37,6 @@ export class ErrorFilter implements ExceptionFilter {
         success: false,
         status: 500,
         message: 'Internal server error',
-        errors: exception.message,
       });
     }
   }
