@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { UserRequestDTO } from 'src/dto/user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ContactResponse } from 'src/response/contact.response';
 import { PhoneResponse } from 'src/response/phone.response';
@@ -7,6 +6,7 @@ import { ValidationService } from 'src/validation/validation.service';
 import {
   CreatePhoneRequestDTO,
   GetPhoneByIdRequestDTO,
+  UpdatePhoneRequestDTO,
 } from './../dto/phone.dto';
 import { PhoneValidation } from './phone.validation';
 
@@ -17,12 +17,11 @@ export class PhoneService {
     private validation: ValidationService,
   ) {}
 
-  private async isContactExists(
-    userId: string,
-    contactId: string,
-  ): Promise<ContactResponse> {
+  private async isContactExists(contactId: string): Promise<ContactResponse> {
     const contact = await this.prisma.contact.findFirst({
-      where: { id: contactId, userId },
+      where: {
+        id: contactId,
+      },
       select: {
         id: true,
         firstName: true,
@@ -101,19 +100,14 @@ export class PhoneService {
     };
   }
 
-  async create(
-    user: UserRequestDTO,
-    request: CreatePhoneRequestDTO,
-  ): Promise<PhoneResponse> {
+  async create(request: CreatePhoneRequestDTO): Promise<PhoneResponse> {
     const CreatePhoneRequest: CreatePhoneRequestDTO = this.validation.validate(
       PhoneValidation.CreatePhone,
       request,
     );
 
-    const contact = await this.isContactExists(
-      user.id,
-      CreatePhoneRequest.contactId,
-    );
+    const contact = await this.isContactExists(CreatePhoneRequest.contactId);
+
     await this.isPhoneNumberExists(
       CreatePhoneRequest.contactId,
       CreatePhoneRequest.phoneNumber,
@@ -148,10 +142,7 @@ export class PhoneService {
     };
   }
 
-  async getById(
-    user: UserRequestDTO,
-    request: GetPhoneByIdRequestDTO,
-  ): Promise<PhoneResponse> {
+  async getById(request: GetPhoneByIdRequestDTO): Promise<PhoneResponse> {
     const getPhoneRequest: GetPhoneByIdRequestDTO = this.validation.validate(
       PhoneValidation.GetPhoneById,
       request,
@@ -166,6 +157,44 @@ export class PhoneService {
       id: phone.id,
       contactId: phone.contactId,
       number: phone.number,
+      contact: {
+        firstName: phone.contact.firstName,
+        lastName: phone.contact.lastName || undefined,
+      },
+    };
+  }
+
+  async update(request: UpdatePhoneRequestDTO): Promise<PhoneResponse> {
+    const updatePhoneRequest: UpdatePhoneRequestDTO = this.validation.validate(
+      PhoneValidation.UpdatePhone,
+      request,
+    );
+
+    await this.isContactExists(updatePhoneRequest.contactId);
+
+    const phone = await this.isPhoneExists(
+      updatePhoneRequest.contactId,
+      updatePhoneRequest.phoneId,
+    );
+
+    await this.isPhoneNumberExists(
+      phone.contactId,
+      updatePhoneRequest.phoneNumber as string,
+    );
+
+    const updatedPhone = await this.prisma.phone.update({
+      where: {
+        id: phone.id,
+      },
+      data: {
+        number: updatePhoneRequest.phoneNumber,
+      },
+    });
+
+    return {
+      id: updatedPhone.id,
+      contactId: updatedPhone.contactId,
+      number: updatedPhone.number,
       contact: {
         firstName: phone.contact.firstName,
         lastName: phone.contact.lastName || undefined,
