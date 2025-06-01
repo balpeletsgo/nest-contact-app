@@ -106,6 +106,16 @@ export class ContactService {
               mode: 'insensitive',
             },
           },
+          {
+            Phone: {
+              some: {
+                number: {
+                  contains: searchContactRequest.query,
+                  mode: 'insensitive',
+                },
+              },
+            },
+          },
         ],
       });
     }
@@ -211,11 +221,16 @@ export class ContactService {
   }
 
   async delete(user: UserRequestDTO, contactId: string): Promise<void> {
-    await this.isContactExists(user.id, contactId);
+    const deleteContactRequest: { contactId: string } =
+      this.validation.validate(ContactValidation.GetContactById, {
+        contactId,
+      });
+
+    await this.isContactExists(user.id, deleteContactRequest.contactId);
 
     await this.prisma.contact.delete({
       where: {
-        id: contactId,
+        id: deleteContactRequest.contactId,
         userId: user.id,
       },
     });
