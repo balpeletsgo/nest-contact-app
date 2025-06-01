@@ -13,6 +13,6 @@ export class Pagination {
   total_pages: number;
   has_next_page: boolean;
   has_previous_page: boolean;
-  next_page?: number;
-  previous_page?: number;
+  next_page: number | null;
+  previous_page: number | null;
 }
