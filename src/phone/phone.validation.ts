@@ -16,6 +16,9 @@ export class PhoneValidation {
   });
 
   static readonly GetPhoneById = z.object({
+    contactId: z
+      .string({ required_error: 'Contact ID is required' })
+      .uuid({ message: 'Invalid Contact ID format' }),
     phoneId: z
       .string({ required_error: 'Phone ID is required' })
       .uuid({ message: 'Invalid Phone ID format' }),

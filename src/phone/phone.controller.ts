@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
@@ -33,6 +34,26 @@ export class PhoneController {
       success: true,
       status: HttpStatus.CREATED,
       message: 'Phone created successfully',
+      data: result,
+    };
+  }
+
+  @Get(':phoneId')
+  @HttpCode(HttpStatus.OK)
+  async getPhoneById(
+    @Request() req: UserRequest,
+    @Param('contactId') contactId: string,
+    @Param('phoneId') phoneId: string,
+  ): Promise<WebResponse<PhoneResponse>> {
+    const result = await this.phoneService.getById(req.user, {
+      contactId,
+      phoneId,
+    });
+
+    return {
+      success: true,
+      status: HttpStatus.OK,
+      message: 'Phone retrieved successfully',
       data: result,
     };
   }

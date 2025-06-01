@@ -4,7 +4,10 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { ContactResponse } from 'src/response/contact.response';
 import { PhoneResponse } from 'src/response/phone.response';
 import { ValidationService } from 'src/validation/validation.service';
-import { CreatePhoneRequestDTO } from './../dto/phone.dto';
+import {
+  CreatePhoneRequestDTO,
+  GetPhoneByIdRequestDTO,
+} from './../dto/phone.dto';
 import { PhoneValidation } from './phone.validation';
 
 @Injectable()
@@ -61,6 +64,43 @@ export class PhoneService {
     return false;
   }
 
+  private async isPhoneExists(
+    contactId: string,
+    phoneId: string,
+  ): Promise<PhoneResponse> {
+    const phone = await this.prisma.phone.findFirst({
+      where: {
+        id: phoneId,
+        contactId,
+      },
+      select: {
+        id: true,
+        contactId: true,
+        number: true,
+        contact: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    if (!phone) {
+      throw new HttpException('Phone not found', HttpStatus.NOT_FOUND);
+    }
+
+    return {
+      id: phone.id,
+      contactId: phone.contactId,
+      number: phone.number,
+      contact: {
+        firstName: phone.contact.firstName,
+        lastName: phone.contact.lastName || undefined,
+      },
+    };
+  }
+
   async create(
     user: UserRequestDTO,
     request: CreatePhoneRequestDTO,
@@ -96,6 +136,31 @@ export class PhoneService {
         },
       },
     });
+
+    return {
+      id: phone.id,
+      contactId: phone.contactId,
+      number: phone.number,
+      contact: {
+        firstName: phone.contact.firstName,
+        lastName: phone.contact.lastName || undefined,
+      },
+    };
+  }
+
+  async getById(
+    user: UserRequestDTO,
+    request: GetPhoneByIdRequestDTO,
+  ): Promise<PhoneResponse> {
+    const getPhoneRequest: GetPhoneByIdRequestDTO = this.validation.validate(
+      PhoneValidation.GetPhoneById,
+      request,
+    );
+
+    const phone = await this.isPhoneExists(
+      getPhoneRequest.contactId,
+      getPhoneRequest.phoneId,
+    );
 
     return {
       id: phone.id,
