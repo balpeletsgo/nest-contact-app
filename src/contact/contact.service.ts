@@ -2,13 +2,14 @@ import { HttpException, Injectable } from '@nestjs/common';
 import {
   CreateContactRequestDTO,
   SearchContactRequestDTO,
+  UpdateContactRequestDTO,
 } from 'src/dto/contact.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { ValidationService } from 'src/validation/validation.service';
-import { ContactValidation } from './contact.validation';
 import { UserRequestDTO } from 'src/dto/user.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { ContactResponse } from 'src/response/contact.response';
 import { WebResponse } from 'src/response/web.response';
+import { ValidationService } from 'src/validation/validation.service';
+import { ContactValidation } from './contact.validation';
 
 @Injectable()
 export class ContactService {
@@ -17,24 +18,44 @@ export class ContactService {
     private validation: ValidationService,
   ) {}
 
-  async isUserExists(userId: string): Promise<boolean> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+  private async isContactExists(
+    userId: string,
+    contactId: string,
+  ): Promise<ContactResponse> {
+    const contact = await this.prisma.contact.findFirst({
+      where: { id: contactId, userId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        Phone: {
+          select: {
+            number: true,
+          },
+        },
+      },
     });
 
-    if (!user) {
-      throw new HttpException('User not found', 404);
+    if (!contact) {
+      throw new HttpException('Contact not found', 404);
     }
 
-    return true;
+    return {
+      id: contact.id,
+      firstName: contact.firstName,
+      lastName: contact.lastName || undefined,
+      email: contact.email || undefined,
+      phones: contact.Phone.map((p) => ({
+        number: p.number,
+      })),
+    };
   }
 
   async create(
     user: UserRequestDTO,
     request: CreateContactRequestDTO,
   ): Promise<ContactResponse> {
-    await this.isUserExists(user.id);
-
     const createContactRequest: CreateContactRequestDTO =
       this.validation.validate(ContactValidation.CreateContact, request);
 
@@ -43,7 +64,6 @@ export class ContactService {
         firstName: createContactRequest.firstName,
         lastName: createContactRequest.lastName,
         email: createContactRequest.email,
-        phone: createContactRequest.phone,
         userId: user.id,
       },
     });
@@ -53,7 +73,6 @@ export class ContactService {
       firstName: contact.firstName,
       lastName: contact.lastName || undefined,
       email: contact.email || undefined,
-      phone: contact.phone,
     };
   }
 
@@ -61,25 +80,29 @@ export class ContactService {
     user: UserRequestDTO,
     request: SearchContactRequestDTO,
   ): Promise<WebResponse<ContactResponse[]>> {
-    await this.isUserExists(user.id);
-
     const searchContactRequest: SearchContactRequestDTO =
       this.validation.validate(ContactValidation.SearchContact, request);
 
     const filters: any[] = [];
 
-    if (searchContactRequest.name) {
+    if (searchContactRequest.query) {
       filters.push({
         OR: [
           {
             firstName: {
-              contains: searchContactRequest.name,
+              contains: searchContactRequest.query,
               mode: 'insensitive',
             },
           },
           {
             lastName: {
-              contains: searchContactRequest.name,
+              contains: searchContactRequest.query,
+              mode: 'insensitive',
+            },
+          },
+          {
+            email: {
+              contains: searchContactRequest.query,
               mode: 'insensitive',
             },
           },
@@ -120,7 +143,6 @@ export class ContactService {
         firstName: contact.firstName,
         lastName: contact.lastName || undefined,
         email: contact.email || undefined,
-        phone: contact.phone,
       })),
       pagination: {
         total_items: total,
@@ -133,5 +155,69 @@ export class ContactService {
         total_pages: totalPages || 1,
       },
     };
+  }
+
+  async getById(
+    user: UserRequestDTO,
+    contactId: string,
+  ): Promise<ContactResponse> {
+    console.log({ contactId });
+
+    const contactIdRequest: { contactId: string } = this.validation.validate(
+      ContactValidation.GetContactById,
+      {
+        contactId,
+      },
+    );
+
+    const contact = await this.isContactExists(
+      user.id,
+      contactIdRequest.contactId,
+    );
+
+    return contact;
+  }
+
+  async update(
+    user: UserRequestDTO,
+    request: UpdateContactRequestDTO,
+  ): Promise<ContactResponse> {
+    const updateContactRequest: UpdateContactRequestDTO =
+      this.validation.validate(ContactValidation.UpdateContact, {
+        ...request,
+        contactId: request.contactId,
+      });
+
+    await this.isContactExists(user.id, updateContactRequest.contactId);
+
+    const contact = await this.prisma.contact.update({
+      where: {
+        id: updateContactRequest.contactId,
+        userId: user.id,
+      },
+      data: {
+        firstName: updateContactRequest.firstName,
+        lastName: updateContactRequest.lastName,
+        email: updateContactRequest.email,
+      },
+    });
+
+    return {
+      id: contact.id,
+      firstName: contact.firstName,
+      lastName: contact.lastName || undefined,
+      email: contact.email || undefined,
+    };
+  }
+
+  async delete(user: UserRequestDTO, contactId: string): Promise<void> {
+    await this.isContactExists(user.id, contactId);
+
+    await this.prisma.contact.delete({
+      where: {
+        id: contactId,
+        userId: user.id,
+      },
+    });
   }
 }

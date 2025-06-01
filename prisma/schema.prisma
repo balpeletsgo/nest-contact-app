@@ -29,16 +29,28 @@ model User {
 }
 
 model Contact {
-  id        String   @id @default(uuid()) @db.VarChar(255)
+  id        String   @id @default(uuid()) @db.Uuid
   firstName String   @db.VarChar(255)
   lastName  String?  @db.VarChar(255)
   email     String?  @db.VarChar(255)
-  phone     String   @db.VarChar(100)
   userId    String   @db.VarChar(255)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  Phone     Phone[]
 
   @@index([userId], name: "idx_contacts_user_id")
   @@map("contacts")
+}
+
+model Phone {
+  id        String   @id @default(uuid()) @db.Uuid
+  number    String   @db.VarChar(100)
+  contactId String   @db.Uuid
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([contactId], name: "idx_phones_contact_id")
+  @@map("phones")
 }

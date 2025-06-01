@@ -3,5 +3,9 @@ export class ContactResponse {
   firstName: string;
   lastName?: string;
   email?: string;
-  phone: string;
+  phones?: Phone[];
+}
+
+export class Phone {
+  number: string;
 }
