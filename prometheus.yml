@@ -1,3 +1,6 @@
+global:
+  scrape_interval: 15s
+
 scrape_configs:
   - job_name: 'nestjs-app'
     metrics_path: '/v1/metrics'
