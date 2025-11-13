@@ -1,5 +1,7 @@
 FROM node:20-alpine AS builder
 
+RUN apk add --no-cache libc6-compat openssl
+
 WORKDIR /app
 
 # Copy package files and prisma directory first
